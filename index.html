@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Club Café </title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- إعدادات تيلويند وملف التنسيقات -->
+    <script src="tailwind.config.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-cream-100 text-slate-800 font-sans min-h-full flex flex-col antialiased pb-24 no-scrollbar" id="bodyRoot">
+
+    <!-- Toast Notification Popup -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 z-50 bg-burgundy-900 text-amber-300 px-5 py-3 rounded-2xl shadow-2xl border border-amber-400/40 text-xs font-bold transform translate-y-24 opacity-0 transition-all duration-300 flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-base text-emerald-400"></i>
+        <span id="toastMessage">Enregistré avec succès</span>
+    </div>
+
+    <!-- Flash Promo Client Banner (Dynamic) -->
+    <div id="flashPromoClientBanner" class="bg-gradient-to-r from-amber-500 to-red-600 text-white text-center py-2.5 px-4 text-xs font-extrabold hidden flex items-center justify-center gap-2 sticky top-0 z-50 shadow-lg animate-pulse">
+        <i class="fa-solid fa-bolt text-amber-200"></i>
+        <span id="flashPromoText">⚡ عرض خاص لك! خصم 10% على سلتك الحالية لفترة محدودة! / Offre Spéciale -10% !</span>
+        <button onclick="applyFlashPromo()" class="ml-3 px-3 py-1 bg-white text-burgundy-900 rounded-lg text-[11px] font-black shadow hover:bg-amber-100 transition">تطبيق الخصم</button>
+    </div>
+
+    <!-- Low Stock Alert Banner -->
+    <div id="lowStockBanner" class="bg-amber-600 text-white text-center py-2 px-4 text-xs font-bold hidden flex items-center justify-center gap-2 sticky top-0 z-50">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span id="lowStockText">⚠️ Alerte Stock : certains produits ou offres sont bientôt épuisés !</span>
+    </div>
+
+    <!-- Rush Hour Banner Notice -->
+    <div id="rushBanner" class="bg-red-600 text-white text-center py-2 px-4 text-xs font-bold hidden flex items-center justify-center gap-2 sticky top-0 z-50">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span id="rushBannerText">⚠️ Attention : Le café est en heure de pointe actuellement. Commandes en ligne suspendues temporairement.</span>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-40 bg-burgundy-800 text-cream-100 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-burgundy-500 flex items-center justify-center text-cream-100 shadow-lg flex-shrink-0">
+                    <i class="fa-solid fa-mug-hot text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-extrabold tracking-wide text-cream-100 leading-tight">CLUB CAFÉ</h1>
+                    <p class="text-[11px] sm:text-xs text-cream-200 opacity-85">Menu Interactif & Dashboard</p>
+                </div>
+            </div>
+
+            <div class="flex-1 max-w-md hidden md:block">
+                <div class="relative">
+                    <input type="text" id="searchInput" oninput="debouncedFilterMenu(this.value)" placeholder="Rechercher un produit ou une offre..." 
+                           class="w-full pl-10 pr-4 py-2 rounded-full bg-burgundy-900/60 text-cream-100 placeholder-cream-200/60 focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm border border-burgundy-700 transition duration-200">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-cream-200/60 text-sm"></i>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="openAdminModal()" id="dashboardMainBtn" class="relative px-3 sm:px-3.5 py-1.5 rounded-full bg-amber-500 hover:bg-amber-400 text-burgundy-900 text-xs font-extrabold transition-all duration-200 hover:scale-105 flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-gauge"></i>
+                    <span class="hidden sm:inline">Dashboard</span>
+                    <span id="orderNotificationBadge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden animate-bounce">!</span>
+                </button>
+
+                <button onclick="openFavoritesModal()" class="relative p-2.5 bg-burgundy-700 hover:bg-burgundy-500 text-red-400 rounded-full font-bold shadow transition-all duration-200 hover:scale-105 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 border border-burgundy-500">
+                    <i class="fa-solid fa-heart text-sm sm:text-base"></i>
+                    <span id="favBadge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center font-extrabold border-2 border-burgundy-800 hidden">0</span>
+                </button>
+
+                <button onclick="openCartModal()" class="relative p-2.5 bg-burgundy-700 hover:bg-burgundy-500 text-amber-300 rounded-full font-bold shadow transition-all duration-200 hover:scale-105 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 border border-burgundy-500">
+                    <i class="fa-solid fa-basket-shopping text-sm sm:text-base"></i>
+                    <span id="cartBadge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center font-extrabold border-2 border-burgundy-800 hidden">0</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="px-4 pb-3 md:hidden">
+            <div class="relative">
+                <input type="text" id="searchInputMobile" oninput="debouncedFilterMenu(this.value)" placeholder="Rechercher..." 
+                       class="w-full pl-10 pr-4 py-2 rounded-full bg-burgundy-900/60 text-cream-100 placeholder-cream-200/60 focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm border border-burgundy-700 transition duration-200">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-cream-200/60 text-sm"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="max-w-7xl mx-auto px-4 py-6 w-full space-y-6 flex-grow">
+
+        <div id="clientActiveOrderBanner" class="hidden sticky top-[115px] sm:top-[76px] z-30 transition-all duration-300">
+            <div class="bg-burgundy-900 text-cream-100 p-4 sm:p-5 rounded-2xl shadow-2xl border border-amber-400/40 space-y-3 relative">
+                <button onclick="dismissClientTracker()" class="absolute right-4 top-4 text-cream-200 hover:text-white p-1.5 rounded-full bg-burgundy-800 transition hover:scale-110 shadow" title="Fermer le suivi">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+                <div class="flex items-center justify-between border-b border-burgundy-700 pb-2 pr-10">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-receipt text-amber-400 text-lg"></i>
+                        <h3 class="font-extrabold text-sm sm:text-base">Suivi de votre commande <span id="bannerOrderId" class="text-amber-300">#----</span></h3>
+                    </div>
+                    <span id="bannerStatusBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-burgundy-900">En attente 🟡</span>
+                </div>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs pt-1">
+                    <div>
+                        <p class="text-cream-200">Client : <strong id="bannerClientName" class="text-white">---</strong></p>
+                        <p class="text-cream-200 mt-0.5">Total à régler : <strong id="bannerOrderTotal" class="text-amber-300">0.00 €</strong> (Au comptoir)</p>
+                    </div>
+                    <div id="bannerStatusText" class="font-bold text-amber-300 bg-burgundy-800 px-3 py-2 rounded-xl border border-burgundy-700 shadow-inner">
+                        ⏳ Veuillez vous présenter au comptoir pour régler votre commande.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-start">
+            <button onclick="openClientAllergensModal()" class="px-4 py-2 rounded-full bg-burgundy-900 text-white font-bold text-xs shadow-md flex items-center gap-2 border border-white/20 active:scale-95 transition-transform duration-150">
+                <span class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-white">
+                    <i class="fa-solid fa-triangle-exclamation text-[10px]"></i>
+                </span>
+                <span>Allergènes & Ingrédients</span>
+                <i class="fa-solid fa-chevron-right text-[9px] text-white/60"></i>
+            </button>
+        </div>
+
+        <section class="space-y-2">
+            <div id="dietaryFiltersBar" class="flex gap-2 overflow-x-auto no-scrollbar py-1 cursor-grab active:cursor-grabbing"></div>
+            <div id="subDietaryFiltersBar" class="flex gap-2 overflow-x-auto no-scrollbar py-1.5 px-2 bg-amber-50/70 border border-amber-200/60 rounded-xl hidden transition-all duration-300 cursor-grab active:cursor-grabbing"></div>
+        </section>
+
+        <section>
+            <div id="quickCategoryPills" class="flex gap-2 overflow-x-auto no-scrollbar py-1 border-t border-amber-200/40 pt-3 cursor-grab active:cursor-grabbing"></div>
+        </section>
+
+        <!-- OFFRES DU JOUR -->
+        <section id="formulesSection" class="space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 rounded-lg bg-red-500 text-white shadow-md">
+                        <i class="fa-solid fa-fire text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-bold text-burgundy-900 leading-tight">Offres du Jour</h2>
+                        <p class="text-xs text-slate-500">Nos meilleures affaires du moment à ne pas manquer !</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="formulesGridContainer" class="flex gap-4 overflow-x-auto no-scrollbar pb-2 cursor-grab active:cursor-grabbing"></div>
+        </section>
+
+        <!-- CATEGORIES GRID -->
+        <section class="space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 rounded-lg bg-burgundy-800 text-amber-300 shadow-md">
+                        <i class="fa-solid fa-layer-group text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-bold text-burgundy-900 leading-tight">Catégories</h2>
+                        <p class="text-xs text-slate-500">Choisissez une catégorie pour voir les produits</p>
+                    </div>
+                </div>
+            </div>
+            <div id="categoriesGridContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+        </section>
+    </main>
+
+    <!-- Modal des allergènes -->
+    <div id="clientAllergensModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+        <div id="clientAllergensModalContent" class="w-full max-w-2xl bg-burgundy-900 text-cream-100 rounded-2xl shadow-2xl overflow-hidden flex flex-col p-6 space-y-4 transform scale-95 transition-transform duration-300 ease-out border border-amber-400/30">
+            <div class="flex items-center justify-between border-b border-burgundy-700 pb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-table-cells text-amber-400 text-lg"></i>
+                    <h3 class="font-black text-base text-amber-300">Matrice des Allergènes & Ingrédients</h3>
+                </div>
+                <button onclick="closeClientAllergensModal()" class="text-cream-200 hover:text-white p-1.5 rounded-full bg-burgundy-800 transition hover:scale-110">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-3 text-xs sm:text-sm leading-relaxed text-cream-200">
+                <p>نحرص في <strong class="text-white">Club Café</strong> على توضيح مسببات الحساسية والمكونات لكل صنف بدقة عبر المصفوفة التالية:</p>
+                <p class="text-xs italic text-cream-200/80">Nous veillons à clarifier les allergènes et ingrédients de chaque article grâce à la matrice suivante :</p>
+                
+                <div class="overflow-x-auto rounded-xl border-2 border-burgundy-800 shadow-inner max-h-80 no-scrollbar">
+                    <table class="w-full text-center text-xs sm:text-sm bg-cream-50 text-burgundy-900 border-collapse">
+                        <thead id="clientMatrixHead"></thead>
+                        <tbody id="clientMatrixBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="text-[11px] text-amber-300/95 bg-burgundy-800/80 p-3 rounded-xl border border-burgundy-700 flex items-center justify-between">
+                    <span>🔴 النقاط تمثل مستويات التواجد في المكونات. / Les points représentent les niveaux de présence.</span>
+                    <span class="font-bold">Club Café 2026 ©</span>
+                </div>
+            </div>
+            
+            <div class="pt-2 flex justify-end">
+                <button onclick="closeClientAllergensModal()" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-burgundy-900 font-bold text-xs rounded-xl shadow transition">
+                    فهمت ذلك (Compris)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CATEGORY BOTTOM SHEET MODAL -->
+    <div id="categoryDetailModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300 flex items-end justify-center">
+        <div id="bottomSheet" class="w-full max-w-4xl h-[85vh] bg-burgundy-900 text-cream-100 rounded-t-3xl shadow-2xl overflow-hidden flex flex-col transform translate-y-full transition-transform duration-300 ease-out no-scrollbar">
+            <div class="w-full flex justify-center pt-3 pb-2 bg-burgundy-900 flex-shrink-0 cursor-grab active:cursor-grabbing">
+                <div class="w-14 h-1.5 bg-burgundy-700 rounded-full"></div>
+            </div>
+            <div class="px-4 pb-6 pt-2 flex flex-col items-center justify-center bg-burgundy-900 border-b border-burgundy-700 text-center relative flex-shrink-0">
+                <button onclick="closeCategoryModal()" class="absolute right-4 top-4 text-cream-200 hover:text-white p-2 rounded-full bg-burgundy-800 transition hover:scale-110 pointer-events-auto">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+                <div id="modalCatImgContainer" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-800 border-4 border-amber-400 overflow-hidden shadow-xl mb-3 flex items-center justify-center">
+                    <img id="modalCatImg" src="" loading="lazy" class="w-full h-full object-cover">
+                </div>
+                <h3 id="modalCatTitle" class="text-xl sm:text-2xl font-black tracking-wide text-amber-300">Nom de Catégorie</h3>
+                <p class="text-xs text-cream-200/80 mt-1">Produits disponibles dans cette catégorie</p>
+            </div>
+            <div id="modalCatItemsList" class="p-4 sm:p-6 overflow-y-auto space-y-4 bg-cream-50 text-slate-800 flex-grow pointer-events-auto"></div>
+        </div>
+    </div>
+
+    <!-- ITEM CUSTOMIZATION & OPTIONS -->
+    <div id="customizationModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+        <div id="customizationModalContent" class="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col transform scale-95 transition-transform duration-300 ease-out max-h-[90vh]">
+            <div class="p-4 bg-burgundy-800 text-cream-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-burger text-amber-400"></i>
+                    <h3 class="font-bold text-base">Personnalisation du produit</h3>
+                </div>
+                <button onclick="closeCustomizationModal()" class="text-cream-200 hover:text-white transition hover:scale-110">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 sm:p-6 space-y-5 overflow-y-auto max-h-[70vh] no-scrollbar">
+                <div class="flex items-center justify-between border-b pb-4">
+                    <div class="flex items-center gap-4">
+                        <img id="custModalImg" src="" loading="lazy" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shadow">
+                        <div>
+                            <h4 id="custItemName" class="font-extrabold text-slate-800 text-base sm:text-lg">Nom du produit</h4>
+                            <p id="custItemBasePrice" class="text-burgundy-800 font-black text-sm sm:text-base mt-1">0.00 €</p>
+                        </div>
+                    </div>
+                    <button id="custFavBtn" onclick="toggleFavoriteCurrent()" class="p-3 rounded-full bg-slate-100 text-slate-400 hover:text-red-600 transition shadow">
+                        <i class="fa-solid fa-heart text-xl"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="font-bold text-xs text-slate-700 block">🌡️ Température :</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="flex items-center justify-center p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs font-bold transition">
+                            <input type="radio" name="temp" value="Chaud" checked class="mr-2"> Chaud
+                        </label>
+                        <label class="flex items-center justify-center p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs font-bold transition">
+                            <input type="radio" name="temp" value="Glacé" class="mr-2"> Glacé
+                        </label>
+                    </div>
+                </div>
+
+                <div id="nestedDietaryOptionsSection" class="space-y-2 hidden">
+                    <label id="nestedDietaryLabel" class="font-bold text-xs text-burgundy-900 block border-b pb-1">🥛 Choix :</label>
+                    <div id="nestedDietaryOptionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="font-bold text-xs text-slate-700 block">📏 Taille :</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs font-bold transition">
+                            <span><input type="radio" name="size" value="Petit" data-price="0.00" checked class="mr-1"> Petit</span>
+                            <span class="text-[10px] text-slate-400">Standard</span>
+                        </label>
+                        <label class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs font-bold transition">
+                            <span><input type="radio" name="size" value="Moyen" data-price="0.50" class="mr-1"> Moyen</span>
+                            <span class="text-[10px] text-burgundy-800">+0.50 €</span>
+                        </label>
+                        <label class="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs font-bold transition">
+                            <span><input type="radio" name="size" value="Grand" data-price="1.00" class="mr-1"> Grand</span>
+                            <span class="text-[10px] text-burgundy-800">+1.00 €</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h5 class="font-bold text-xs text-slate-500 uppercase tracking-wider">Suppléments optionnels</h5>
+                    <div id="dynamicAddonsContainer" class="space-y-2"></div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="font-bold text-xs text-slate-700 block">📝 Instructions spéciales :</label>
+                    <textarea id="customerItemNote" placeholder="Ex: Sans oignon, sauce extra..." class="w-full p-3 text-xs border rounded-xl focus:ring-2 focus:ring-burgundy-500 outline-none transition duration-200"></textarea>
+                </div>
+            </div>
+            <div class="p-4 bg-slate-50 border-t flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-slate-500 font-bold">Total final :</span>
+                    <div id="custFinalPrice" class="text-lg sm:text-xl font-black text-burgundy-900">0.00 €</div>
+                </div>
+                <button onclick="confirmAddToCartCustomized()" class="px-5 sm:px-6 py-3 bg-burgundy-800 hover:bg-burgundy-700 text-amber-300 rounded-xl font-bold text-xs shadow transition-all duration-200 hover:scale-105">
+                    Ajouter au panier
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CART MODAL -->
+    <div id="cartModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300 flex justify-end">
+        <div id="cartModalContent" class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out">
+            <div class="p-4 bg-burgundy-800 text-cream-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-basket-shopping text-amber-400"></i>
+                    <h3 class="font-bold text-lg">Mon Panier</h3>
+                </div>
+                <button onclick="closeCartModal()" class="text-cream-200 hover:text-white p-1 transition hover:scale-110">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-grow space-y-4 no-scrollbar" id="cartItemsContainer">
+                <div class="text-center text-slate-400 py-10">
+                    <i class="fa-solid fa-basket-shopping text-4xl mb-2 opacity-30"></i>
+                    <p>Votre panier est vide</p>
+                </div>
+            </div>
+            <div class="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
+                <form id="checkoutForm" onsubmit="submitOrderInternal(event)" class="space-y-3">
+                    <div class="flex flex-col gap-1 bg-white p-2.5 rounded-xl border border-slate-300 shadow-sm">
+                        <label class="text-[11px] font-extrabold text-burgundy-900">👤 Nom du Client *</label>
+                        <input type="text" id="clientNameInput" placeholder="Entrez votre nom..." required class="w-full text-xs font-bold outline-none bg-transparent">
+                    </div>
+                    <div class="flex justify-between text-burgundy-900 font-black text-lg pt-1">
+                        <span>Total :</span>
+                        <span id="cartTotal">0.00 €</span>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-burgundy-800 hover:bg-burgundy-700 text-amber-300 rounded-xl font-bold shadow transition-all duration-200 hover:scale-105 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane text-base"></i> <span>Commander (Payer au comptoir)</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAVORITES MODAL -->
+    <div id="favoritesModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300 flex justify-end">
+        <div id="favoritesModalContent" class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col justify-between transform translate-x-full transition-transform duration-300 ease-out">
+            <div class="p-4 bg-burgundy-800 text-cream-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-heart text-red-400"></i>
+                    <h3 class="font-bold text-lg">Mes Favoris</h3>
+                </div>
+                <button onclick="closeFavoritesModal()" class="text-cream-200 hover:text-white p-1 transition hover:scale-110">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-grow space-y-4 no-scrollbar" id="favoritesItemsContainer">
+                <div class="text-center text-slate-400 py-10">
+                    <i class="fa-solid fa-heart text-4xl mb-2 opacity-30"></i>
+                    <p>Aucun favori pour le moment</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN LOGIN MODAL -->
+    <div id="adminLoginModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+        <div id="adminLoginModalContent" class="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col p-6 space-y-4 transform scale-95 transition-transform duration-300 ease-out">
+            <div class="flex items-center justify-between border-b pb-2">
+                <h3 class="font-bold text-base text-burgundy-900">🔐 Connexion Dashboard</h3>
+                <button onclick="closeAdminLoginModal()" class="text-slate-400 hover:text-slate-600 transition hover:scale-110">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form onsubmit="verifyAdminPassword(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Mot de passe :</label>
+                    <input type="password" id="adminPasswordInput" placeholder="Entrez le mot de passe..." required class="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:ring-2 focus:ring-burgundy-500 transition">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-burgundy-800 hover:bg-burgundy-700 text-amber-300 font-bold text-xs rounded-lg shadow transition-all duration-200 hover:scale-105">
+                    Se connecter
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADMIN SETTINGS / PASSWORD MODAL -->
+    <div id="adminSettingsModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[999] hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+        <div id="adminSettingsModalContent" class="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col p-6 space-y-4 transform scale-95 transition-transform duration-300 ease-out">
+            <div class="flex items-center justify-between border-b pb-2">
+                <h3 class="font-bold text-base text-burgundy-900">⚙️ Changer le mot de passe</h3>
+                <button onclick="closeAdminSettingsModal()" class="text-slate-400 hover:text-slate-600 transition hover:scale-110">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form onsubmit="updateAdminPassword(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Code Secret Master (Requis) :</label>
+                    <input type="password" id="masterKeyInput" placeholder="Entrez le code secret..." required class="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:ring-2 focus:ring-burgundy-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nouveau mot de passe :</label>
+                    <input type="password" id="newAdminPasswordInput" placeholder="Entrer le nouveau mot de passe..." required class="w-full px-3 py-2 text-xs border rounded-lg outline-none focus:ring-2 focus:ring-burgundy-500 transition">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-burgundy-800 hover:bg-burgundy-700 text-amber-300 font-bold text-xs rounded-lg shadow transition-all duration-200 hover:scale-105">
+                    Enregistrer le mot de passe
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PRO DASHBOARD MODAL -->
+    <div id="adminModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+        <div id="adminModalContent" class="w-[95%] sm:w-[90%] md:w-[1024px] h-[85vh] max-h-[800px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col transform scale-95 transition-transform duration-300 ease-out">
+            <div class="p-3 sm:p-4 bg-burgundy-900 text-cream-100 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-gauge-high text-amber-400"></i>
+                    <h3 class="font-bold text-base sm:text-lg">Tableau de Bord Pro</h3>
+                </div>
+                <div class="flex items-center flex-wrap gap-2">
+                    <button onclick="toggleRushHour()" id="rushHourToggleBtn" class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-600 text-white shadow transition hover:scale-105">
+                        🟢 Café : Ouvert
+                    </button>
+                    <button id="masterSettingsBtn" onclick="openAdminSettingsModal()" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-700 text-cream-100 shadow transition hidden items-center gap-1.5 hover:scale-105">
+                        <i class="fa-solid fa-key"></i> Paramètres
+                    </button>
+                    <button onclick="exportDatabaseJSON()" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-600 text-white shadow transition flex items-center gap-1.5 hover:scale-105" title="تصدير نسخة احتياطية">
+                        <i class="fa-solid fa-download"></i> <span>Export JSON</span>
+                    </button>
+                    <label class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow transition flex items-center gap-1.5 hover:scale-105 cursor-pointer" title="استيراد نسخة احتياطية">
+                        <i class="fa-solid fa-upload"></i> <span>Import JSON</span>
+                        <input type="file" accept=".json" onchange="importDatabaseJSON(event)" class="hidden">
+                    </label>
+                    <button onclick="exportCSVReport()" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500 text-burgundy-900 shadow transition flex items-center gap-1.5 hover:scale-105">
+                        <i class="fa-solid fa-file-excel"></i> <span class="hidden sm:inline">Excel</span>
+                    </button>
+                    <button onclick="logoutAdmin()" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-red-600 text-white shadow transition flex items-center gap-1.5 hover:scale-105">
+                        <i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline">Quitter</span>
+                    </button>
+                    <button onclick="closeAdminModal()" class="text-cream-200 hover:text-white p-1 transition hover:scale-110">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Stats Bar -->
+            <div class="bg-amber-50 px-4 sm:px-6 py-3 border-b flex flex-wrap gap-4 sm:gap-8 text-xs font-bold text-burgundy-900 items-center flex-shrink-0">
+                <span>📊 Statistiques :</span>
+                <span id="statTotalProducts" class="bg-white px-2.5 py-1 rounded-lg shadow-sm">Produits : 0</span>
+                <span id="statTotalCategories" class="bg-white px-2.5 py-1 rounded-lg shadow-sm">Catégories : 0</span>
+                <span id="statTotalOrders" class="bg-white px-2.5 py-1 rounded-lg shadow-sm">Commandes : 0</span>
+                <span id="statActiveCarts" class="bg-amber-100 text-amber-900 px-2.5 py-1 rounded-lg shadow-sm">🛒 سلال نشطة : 0</span>
+                <span id="statTotalRevenue" class="bg-white px-2.5 py-1 rounded-lg shadow-sm text-emerald-700">Revenus : 0.00 €</span>
+            </div>
+
+            <!-- Detailed Tabs -->
+            <div id="adminTabsContainer" class="bg-slate-100 px-4 sm:px-6 pt-3 border-b flex gap-2 sm:gap-3 overflow-x-auto no-scrollbar flex-shrink-0 cursor-grab active:cursor-grabbing select-none">
+                <button onclick="switchAdminTab('formules')" id="tabBtnFormules" class="pb-3 px-3 sm:px-4 font-bold text-xs border-b-2 border-burgundy-800 text-burgundy-900 transition flex items-center gap-2 flex-shrink-0">
+                    <i class="fa-solid fa-fire"></i> <span>Offres & Stock</span>
+                </button>
+                <button onclick="switchAdminTab('categories')" id="tabBtnCategories" class="pb-3 px-3 sm:px-4 font-bold text-xs border-b-2 border-transparent text-slate-500 hover:text-burgundy-900 transition flex items-center gap-2 flex-shrink-0">
+                    <i class="fa-solid fa-folder-tree"></i> <span>Catégories & Suppléments</span>
+                </button>
+                <button onclick="switchAdminTab('diets')" id="tabBtnDiets" class="pb-3 px-3 sm:px-4 font-bold text-xs border-b-2 border-transparent text-slate-500 hover:text-burgundy-900 transition flex items-center gap-2 flex-shrink-0">
+                    <i class="fa-solid fa-seedling"></i> <span>Filtres & Options</span>
+                </button>
+                <button onclick="switchAdminTab('allergens')" id="tabBtnAllergens" class="pb-3 px-3 sm:px-4 font-bold text-xs border-b-2 border-transparent text-slate-500 hover:text-burgundy-900 transition flex items-center gap-2 flex-shrink-0">
+                    <i class="fa-solid fa-table-cells"></i> <span>Matrice des Allergènes</span>
+                </button>
+                <button onclick="switchAdminTab('clients')" id="tabBtnClients" class="pb-3 px-3 sm:px-4 font-bold text-xs border-b-2 border-transparent text-slate-500 hover:text-burgundy-900 transition flex items-center gap-2 flex-shrink-0">
+                    <i class="fa-solid fa-users"></i> <span>Clients (Panier & Favoris)</span>
+                </button>
+                <button onclick="switchAdminTab('orders')" id="tabBtnOrders" class="pb-3 px-3 sm:px-4 font-bold text-xs border-b-2 border-transparent text-slate-500 hover:text-burgundy-900 transition flex items-center gap-2 flex-shrink-0">
+                    <i class="fa-solid fa-receipt"></i> <span>Commandes & Impression</span>
+                </button>
+            </div>
+
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-6 flex-grow bg-slate-50 no-scrollbar">
+                
+                <!-- TAB 1: OFFRES -->
+                <div id="adminTabFormules" class="space-y-6">
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                        <div class="flex items-center justify-between border-b pb-2 flex-wrap gap-2">
+                            <h4 id="formuleFormTitle" class="font-bold text-burgundy-900 text-sm">
+                                <i class="fa-solid fa-circle-plus text-amber-500"></i> <span>Ajouter ou modifier une Offre</span>
+                            </h4>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="cancelFormuleEditBtn" onclick="resetFormuleForm()" class="px-3 py-1.5 bg-slate-300 text-slate-700 font-bold text-xs rounded-xl hidden transition">Annuler</button>
+                                <label class="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-extrabold cursor-pointer shadow flex items-center gap-1.5 transition hover:scale-105">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> Scan avec l'IA
+                                    <input type="file" accept="image/*" onchange="handleAiScan(event, 'formule')" class="hidden">
+                                </label>
+                            </div>
+                        </div>
+                        <form onsubmit="saveFormule(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <input type="hidden" id="editFormuleId" value="">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Titre de l'Offre:</label>
+                                <input type="text" id="newFormuleTitle" placeholder="Offre Club" class="w-full px-3 py-2 text-xs border rounded-lg transition">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Prix (€):</label>
+                                <input type="number" step="0.01" id="newFormulePrice" placeholder="8.90" class="w-full px-3 py-2 text-xs border rounded-lg transition">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Badge (ex: OFFRE TOP):</label>
+                                <input type="text" id="newFormuleBadge" placeholder="OFFRE TOP" class="w-full px-3 py-2 text-xs border rounded-lg transition">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Stock de l'Offre:</label>
+                                <input type="number" id="newFormuleStock" placeholder="10" class="w-full px-3 py-2 text-xs border rounded-lg transition">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Description:</label>
+                                <input type="text" id="newFormuleDesc" placeholder="1 Sandwich au choix + 1 Pâtisserie..." class="w-full px-3 py-2 text-xs border rounded-lg transition">
+                            </div>
+                            <div class="lg:col-span-3">
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Image URL:</label>
+                                <input type="url" id="newFormuleImg" placeholder="https://..." class="w-full px-3 py-2 text-xs border rounded-lg transition">
+                            </div>
+                            <div class="lg:col-span-3 flex items-center justify-between flex-wrap gap-3">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="newFormuleInfinite" onchange="toggleInfiniteFormuleStockInput(this.checked)" class="w-4 h-4 text-burgundy-800 rounded">
+                                    <span class="text-xs font-bold text-slate-700">♾️ Stock infini</span>
+                                </label>
+                                <button type="submit" class="px-6 py-2.5 bg-burgundy-800 hover:bg-burgundy-700 text-amber-300 font-bold text-xs rounded-lg shadow transition hover:scale-105">Enregistrer l'Offre</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-4 bg-slate-100 border-b flex flex-wrap justify-between items-center gap-3">
+                            <span class="font-bold text-xs text-slate-700">Liste des Offres (Modifiable directement) :</span>
+                        </div>
+                        <div class="overflow-x-auto max-h-80 no-scrollbar">
+                            <table class="w-full text-left text-xs min-w-[600px]">
+                                <thead class="bg-slate-50 text-slate-500 border-b sticky top-0">
+                                    <tr>
+                                        <th class="p-3 w-16 text-center">Ordre</th>
+                                        <th class="p-3">Offre</th>
+                                        <th class="p-3 w-28">Prix (€)</th>
+                                        <th class="p-3 w-28">Stock</th>
+                                        <th class="p-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminFormulesTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: CATEGORIES & SUPPLÉMENTS -->
+                <div id="adminTabCategories" class="space-y-6 hidden">
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                        <div class="flex items-center justify-between border-b pb-2 flex-wrap gap-2">
+                            <h4 id="categoryFormTitle" class="font-bold text-burgundy-900 text-sm">
+                                <i class="fa-solid fa-circle-plus text-amber-500"></i> <span>Ajouter ou modifier une catégorie</span>
+                            </h4>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="cancelCatEditBtn" onclick="resetCategoryForm()" class="px-3 py-1.5 bg-slate-300 text-slate-700 font-bold text-xs rounded-xl hidden transition">Annuler</button>
+                                <label class="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-extrabold cursor-pointer shadow flex items-center gap-1.5 transition hover:scale-105">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> Scan avec l'IA
+                                    <input type="file" accept="image/*" onchange="handleAiScan(event, 'category')" class="hidden">
+                                </label>
+                            </div>
+                        </div>
+                        <form onsubmit="saveCategory(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <input type="hidden" id="editCatOriginalId" value="">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">ID (Anglais unique):</label>
+                                <input type="text" id="newCatId" placeholder="ex: juices" class="w-full px-3 py-2 text-xs border rounded-lg transition">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Nom:</label>
+                                <input type="text" id="newCatName" placeholder="Jus Frais" class="w-full px-3 py-2 text-xs border rounded-lg transition">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Image URL:</label>
+                                <input type="url" id="newCatImg" placeholder="https://..." class="w-full px-3 py-2 text-xs border rounded-lg transition">
+                            </div>
+                            <div class="sm:col-span-2 flex justify-end">
+                                <button type="submit" class="px-6 py-2.5 bg-burgundy-800 hover:bg-burgundy-700 text-amber-300 font-bold text-xs rounded-lg shadow transition hover:scale-105">Enregistrer la Catégorie</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                        <div class="border-b pb-2">
+                            <h4 id="prodFormTitle" class="font-bold text-burgundy-900 text-sm">
+                                <i class="fa-solid fa-burger text-amber-500"></i> <span>Ajouter un produit dans une catégorie</span>
+                            </h4>
+                        </div>
+                        <form onsubmit="saveProductHierarchical(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <input type="hidden" id="editProdId" value="">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Nom du produit:</label>
+                                <input type="text" id="hierProdName" placeholder="ex: Café Espresso" class="w-full px-3 py-1.5 text-xs border rounded-lg" required>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Prix (€):</label>
+                                <input type="number" step="0.01" id="hierProdPrice" placeholder="2.50" class="w-full px-3 py-1.5 text-xs border rounded-lg" required>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Catégorie cible:</label>
+                                <select id="hierProdCatSelect" class="w-full px-3 py-1.5 text-xs border rounded-lg" required></select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Stock:</label>
+                                <input type="number" id="hierProdStock" placeholder="10" class="w-full px-3 py-1.5 text-xs border rounded-lg" required>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Image URL:</label>
+                                <input type="url" id="hierProdImg" placeholder="https://..." class="w-full px-3 py-1.5 text-xs border rounded-lg">
+                            </div>
+                            <div class="sm:col-span-2 flex items-center gap-4 pt-4">
+                                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-700">
+                                    <input type="checkbox" id="hierProdHasTemp" class="w-4 h-4 text-burgundy-800 rounded"> 🌡️ Température (Chaud/Glacé)
+                                </label>
+                                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-700">
+                                    <input type="checkbox" id="hierProdHasSize" class="w-4 h-4 text-burgundy-800 rounded"> 📏 Tailles (Petit/Moyen/Grand)
+                                </label>
+                            </div>
+                            <div class="sm:col-span-2 lg:col-span-4 flex justify-end">
+                                <button type="submit" class="px-6 py-2 bg-burgundy-800 hover:bg-burgundy-700 text-amber-300 font-bold text-xs rounded-lg shadow">Ajouter le Produit</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h4 class="font-bold text-burgundy-900 text-sm">Structure hiérarchique :</h4>
+                        <div id="hierarchicalCategoriesContainer" class="space-y-4"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: DIETS -->
+                <div id="adminTabDiets" class="space-y-6 hidden">
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                        <h4 id="dietFormTitle" class="font-bold text-burgundy-900 text-sm border-b pb-2">Ajouter un filtre principal et ses sous-options</h4>
+                        <form onsubmit="saveDietaryFilterForm(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <input type="hidden" id="editDietId" value="">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">ID (Anglais):</label>
+                                <input type="text" id="newDietId" placeholder="ex: lactose" class="w-full px-3 py-2 text-xs border rounded-lg transition">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Nom (avec Emoji):</label>
+                                <input type="text" id="newDietFr" placeholder="🥛 Sans Lactose" class="w-full px-3 py-2 text-xs border rounded-lg transition">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-[11px] font-bold text-burgundy-900 mb-1">Sous-options (séparées par des virgules):</label>
+                                <input type="text" id="newDietSubOptions" placeholder="Lait d'amande, Lait de soja, Lait d'avoine" class="w-full px-3 py-2 text-xs border border-amber-300 rounded-lg bg-amber-50/40 transition">
+                            </div>
+                            <div class="sm:col-span-2 flex justify-end gap-2 flex-wrap">
+                                <button type="button" id="cancelDietEditBtn" onclick="resetDietForm()" class="px-4 py-2 bg-slate-300 text-slate-700 font-bold text-xs rounded-lg hidden transition">Annuler</button>
+                                <button type="submit" class="px-6 py-2.5 bg-burgundy-800 hover:bg-burgundy-700 text-amber-300 font-bold text-xs rounded-lg shadow transition hover:scale-105">Enregistrer le filtre</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <h4 class="font-bold text-burgundy-900 text-sm mb-3">Filtres et contrôle des sous-options :</h4>
+                        <div id="adminDietsList" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: DYNAMIC MATRIX ALLERGENS MANAGEMENT -->
+                <div id="adminTabAllergens" class="space-y-6 hidden">
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                        <div class="flex items-center justify-between border-b pb-2 flex-wrap gap-2">
+                            <h4 class="font-bold text-burgundy-900 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-table-cells text-amber-500"></i> <span>Personnalisation de la Matrice (Colonnes & Lignes)</span>
+                            </h4>
+                            <div class="flex gap-2">
+                                <button onclick="matrixAddColumn()" class="px-3 py-1.5 bg-burgundy-800 hover:bg-burgundy-700 text-amber-300 rounded-xl text-xs font-bold shadow transition">
+                                    <i class="fa-solid fa-plus"></i> إضافة عمود / Ajouter colonne
+                                </button>
+                                <button onclick="matrixRemoveColumn()" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold shadow transition">
+                                    <i class="fa-solid fa-minus"></i> حذف عمود / Supprimer colonne
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h5 class="text-xs font-extrabold text-burgundy-900 uppercase">إضافة سطر جديد (مكون / حساسيات): / Ajouter une ligne :</h5>
+                            </div>
+                            <form onsubmit="matrixSaveRow(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <input type="hidden" id="editMatrixRowIndex" value="-1">
+                                <div class="sm:col-span-2">
+                                    <input type="text" id="newMatrixRowName" placeholder="Ex: Gluten, Lait, Arachides..." class="w-full px-3 py-2 text-xs border rounded-lg" required>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button type="submit" class="flex-1 py-2 bg-burgundy-800 hover:bg-burgundy-700 text-amber-300 font-bold text-xs rounded-lg shadow transition">
+                                        حفظ السطر / Enregistrer
+                                    </button>
+                                    <button type="button" id="cancelMatrixRowEdit" onclick="resetMatrixRowForm()" class="px-3 py-2 bg-slate-300 text-slate-700 font-bold text-xs rounded-lg hidden">إلغاء</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                        <h4 class="font-bold text-burgundy-900 text-sm mb-3">إدارة الصفوف وتفعيل النقاط في المربعات : / Gestion des lignes et activation des points :</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs bg-slate-50 border border-slate-200">
+                                <thead id="adminMatrixEditorHead" class="bg-slate-100 text-slate-700"></thead>
+                                <tbody id="adminMatrixEditorBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB NEW: CLIENTS (PANIER & FAVORIS) WITH FLASH PROMO -->
+                <div id="adminTabClients" class="space-y-4 hidden">
+                    <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                        <div class="border-b pb-2 flex items-center justify-between">
+                            <h4 class="font-bold text-burgundy-900 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-users text-amber-500"></i> <span>Aperçu du Panier & des Favoris des Clients Actuels</span>
+                            </h4>
+                            <div class="flex items-center gap-2">
+                                <button onclick="triggerFlashPromo()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-burgundy-900 rounded-xl text-xs font-extrabold shadow flex items-center gap-1.5">
+                                    <i class="fa-solid fa-bolt"></i> إرسال عرض فلاش (Flash Promo 10%)
+                                </button>
+                                <button onclick="updateClientsTabUI()" class="px-3 py-1.5 bg-burgundy-800 text-amber-300 rounded-xl text-xs font-bold shadow">
+                                    <i class="fa-solid fa-rotate"></i> Actualiser
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Trending / Top 20 Favoris Section -->
+                        <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 space-y-2">
+                            <h5 class="font-extrabold text-xs text-burgundy-900 uppercase flex items-center gap-1.5">
+                                <i class="fa-solid fa-fire text-red-600"></i> Produits les plus populaires / الأكثر رغبة في المفضلة (Top 20) :
+                            </h5>
+                            <div id="adminTrendingFavList" class="flex gap-2 overflow-x-auto no-scrollbar py-1 cursor-grab active:cursor-grabbing">
+                                <p class="text-xs text-slate-400 italic">Aucun favori pour le moment.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                                <h5 class="font-extrabold text-xs text-burgundy-900 uppercase">🛒 Panier actuel (Activité du client) :</h5>
+                                <div id="adminClientsCartList" class="space-y-2 text-xs">
+                                    <p class="text-slate-400 italic">Aucun article dans le panier pour l'instant.</p>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                                <h5 class="font-extrabold text-xs text-burgundy-900 uppercase">❤️ Produits en favoris (Liste complète) :</h5>
+                                <div id="adminClientsFavList" class="space-y-2 text-xs">
+                                    <p class="text-slate-400 italic">Aucun favori enregistré.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: ORDERS -->
+                <div id="adminTabOrders" class="space-y-4 hidden">
+                    <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex-wrap gap-3">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-bold text-xs text-burgundy-900">📦 Filtrer :</span>
+                            <button onclick="setOrderFilter('all')" id="orderFilterAll" class="px-3 py-1 rounded-lg text-xs font-bold bg-burgundy-800 text-amber-300 shadow">Tous</button>
+                            <button onclick="setOrderFilter('En attente de paiement')" id="orderFilterPending" class="px-3 py-1 rounded-lg text-xs font-bold bg-white text-slate-700 border">En attente 🟡</button>
+                            <button onclick="setOrderFilter('En préparation')" id="orderFilterPrep" class="px-3 py-1 rounded-lg text-xs font-bold bg-white text-slate-700 border">Préparation 🔄</button>
+                            <button onclick="setOrderFilter('Prêt')" id="orderFilterReady" class="px-3 py-1 rounded-lg text-xs font-bold bg-white text-slate-700 border">Prêts ☕</button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="clearCompletedOrders()" class="px-3 py-1.5 bg-red-600 text-white rounded-xl text-xs font-bold shadow hover:bg-red-500 transition hover:scale-105 flex items-center gap-1.5">
+                                <i class="fa-solid fa-trash-can"></i> Archiver / Effacer les prêtes
+                            </button>
+                        </div>
+                    </div>
+                    <div id="adminOrdersCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="printReceiptArea" class="hidden"></div>
+
+    <!-- استدعاء ملفات الجافاسكريبت مفصولة ومرتبة -->
+    <script src="assets/js/data.js" defer></script>
+    <script src="assets/js/ui.js" defer></script>
+    <script src="assets/js/cart.js" defer></script>
+    <script src="assets/js/admin.js" defer></script>
+</body>
+</html>
