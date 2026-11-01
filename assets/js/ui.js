@@ -1,37 +1,28 @@
-// Function to show toast notification
-function showToast(msg) {
-    const toast = document.getElementById('toastNotification');
-    if (!toast) return;
-    document.getElementById('toastMessage').innerText = msg;
-    toast.classList.remove('translate-y-24', 'opacity-0');
-    setTimeout(() => toast.classList.add('translate-y-24', 'opacity-0'), 3000);
-}
-
-// Drag to Scroll functionality with performance optimizations
+// تفعيل السحب بالماوس (Drag to Scroll) لجميع الأشرطة الأفقية
 document.addEventListener('DOMContentLoaded', () => {
     const scrollableContainers = document.querySelectorAll('.overflow-x-auto');
     scrollableContainers.forEach(container => {
-        let isDown = false; 
-        let startX; 
+        let isDown = false;
+        let startX;
         let scrollLeft;
-        
+
         container.addEventListener('mousedown', (e) => {
-            isDown = true; 
+            isDown = true;
             container.classList.add('cursor-grabbing');
-            startX = e.pageX - container.offsetLeft; 
+            startX = e.pageX - container.offsetLeft;
             scrollLeft = container.scrollLeft;
-        }, { passive: true });
-        
-        container.addEventListener('mouseleave', () => { 
-            isDown = false; 
-            container.classList.remove('cursor-grabbing'); 
         });
-        
-        container.addEventListener('mouseup', () => { 
-            isDown = false; 
-            container.classList.remove('cursor-grabbing'); 
+
+        container.addEventListener('mouseleave', () => {
+            isDown = false;
+            container.classList.remove('cursor-grabbing');
         });
-        
+
+        container.addEventListener('mouseup', () => {
+            isDown = false;
+            container.classList.remove('cursor-grabbing');
+        });
+
         container.addEventListener('mousemove', (e) => {
             if (!isDown) return;
             e.preventDefault();
@@ -40,126 +31,22 @@ document.addEventListener('DOMContentLoaded', () => {
             container.scrollLeft = scrollLeft - walk;
         });
     });
-    
-    // Initial UI Renders
-    if (typeof renderCategoriesGrid === 'function') {
-        renderCategoriesGrid();
-        renderQuickCategoryPills();
-        renderDietaryFiltersBar();
-        renderSubDietaryBar();
-        renderFormulesGrid();
-    }
+
+    if (typeof syncMaps === 'function') syncMaps();
+    if (typeof renderCategoriesGrid === 'function') renderCategoriesGrid();
+    if (typeof renderQuickCategoryPills === 'function') renderQuickCategoryPills();
+    if (typeof renderDietaryFiltersBar === 'function') renderDietaryFiltersBar();
+    if (typeof renderSubDietaryBar === 'function') renderSubDietaryBar();
+    if (typeof renderFormulesGrid === 'function') renderFormulesGrid();
+    if (typeof updateFavoritesUI === 'function') updateFavoritesUI();
+    if (typeof updateCartUI === 'function') updateCartUI();
+    if (typeof updateClientTrackerBanner === 'function') updateClientTrackerBanner();
+    if (typeof checkFlashPromoStatus === 'function') checkFlashPromoStatus();
 });
-
-// Modal Global Click Listener
-window.addEventListener('click', function(e) {
-    const modals = [
-        { el: document.getElementById('categoryDetailModal'), closeFunc: closeCategoryModal },
-        { el: document.getElementById('customizationModal'), closeFunc: closeCustomizationModal },
-        { el: document.getElementById('cartModal'), closeFunc: closeCartModal },
-        { el: document.getElementById('favoritesModal'), closeFunc: closeFavoritesModal },
-        { el: document.getElementById('adminModal'), closeFunc: closeAdminModal },
-        { el: document.getElementById('adminLoginModal'), closeFunc: closeAdminLoginModal },
-        { el: document.getElementById('adminSettingsModal'), closeFunc: closeAdminSettingsModal },
-        { el: document.getElementById('clientAllergensModal'), closeFunc: closeClientAllergensModal }
-    ];
-    modals.forEach(modal => {
-        if (modal.el && e.target === modal.el && typeof modal.closeFunc === 'function') {
-            modal.closeFunc();
-        }
-    });
-});
-
-let searchTimeout;
-function debouncedFilterMenu(val) { 
-    clearTimeout(searchTimeout); 
-    searchTimeout = setTimeout(() => filterMenu(), 300); 
-}
-
-function filterMenu() {
-    const searchInput = document.getElementById('searchInput');
-    const searchInputMobile = document.getElementById('searchInputMobile');
-    const query = (searchInput ? searchInput.value.toLowerCase() : '') || (searchInputMobile ? searchInputMobile.value.toLowerCase() : '');
-    if(!query) return;
-    
-    if (typeof menuMap !== 'undefined') {
-        for(let [id, item] of menuMap) {
-            if(item.name.toLowerCase().includes(query)) {
-                if (typeof openCategoryModal === 'function') {
-                    openCategoryModal(item.cat);
-                }
-                break;
-            }
-        }
-    }
-}
-
-function renderCategoriesGrid() {
-    const container = document.getElementById('categoriesGridContainer');
-    if (!container || typeof categories === 'undefined') return;
-    
-    container.innerHTML = categories.map(cat => `
-        <div onclick="openCategoryModal('${cat.id}')" class="h-36 sm:h-44 rounded-2xl shadow-md overflow-hidden relative group cursor-pointer border border-amber-300/30 hover:scale-105 transition duration-300 flex flex-col justify-end">
-            <img src="${cat.img}" loading="lazy" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition duration-500">
-            <div class="absolute inset-0 bg-gradient-to-t from-burgundy-900/80 via-transparent to-transparent"></div>
-            <div class="relative p-3 sm:p-4 text-cream-100 flex flex-col justify-end">
-                <h3 class="font-extrabold text-base sm:text-lg tracking-wide">${cat.fr}</h3>
-                <span class="text-xs text-amber-300 font-semibold mt-1">Voir les produits <i class="fa-solid fa-arrow-up text-[10px]"></i></span>
-            </div>
-        </div>
-    `).join('');
-}
-
-function renderQuickCategoryPills() {
-    const pillsContainer = document.getElementById('quickCategoryPills');
-    if (!pillsContainer || typeof categories === 'undefined') return;
-    pillsContainer.innerHTML = categories.map(cat => `
-        <button onclick="openCategoryModal('${cat.id}')" class="px-3.5 py-1.5 rounded-full bg-burgundy-900 text-cream-100 hover:bg-burgundy-700 text-xs font-bold shadow flex-shrink-0 transition flex items-center gap-1.5 hover:scale-105">
-            <img src="${cat.img}" class="w-4 h-4 rounded-full object-cover">
-            <span>${cat.fr}</span>
-        </button>
-    `).join('');
-}
-
-function renderDietaryFiltersBar() {
-    const bar = document.getElementById('dietaryFiltersBar');
-    if (!bar || typeof currentDietaryFilter === 'undefined' || typeof dietaryFilters === 'undefined') return;
-    let html = `<button onclick="filterDietary('all')" class="px-4 py-2 rounded-full ${currentDietaryFilter === 'all' ? 'bg-burgundy-800 text-amber-300 shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'} text-xs font-bold flex-shrink-0 transition">🍽️ Tous</button>`;
-    dietaryFilters.forEach(diet => {
-        const isActive = currentDietaryFilter === diet.id;
-        html += `<button onclick="filterDietary('${diet.id}')" class="px-4 py-2 rounded-full ${isActive ? 'bg-burgundy-800 text-amber-300 shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'} text-xs font-bold flex-shrink-0 transition">${diet.fr}</button>`;
-    });
-    bar.innerHTML = html;
-}
-
-function renderSubDietaryBar() {
-    const subBar = document.getElementById('subDietaryFiltersBar');
-    if (!subBar || typeof currentDietaryFilter === 'undefined' || typeof dietaryFilters === 'undefined') return;
-    const activeDiet = dietaryFilters.find(d => d.id === currentDietaryFilter);
-    if (!activeDiet || !activeDiet.subOptions || activeDiet.subOptions.length === 0) {
-        subBar.classList.add('hidden');
-        subBar.innerHTML = '';
-        return;
-    }
-    const activeSubOpts = activeDiet.subOptions.filter(sub => sub.enabled !== false);
-    if (activeSubOpts.length === 0) {
-        subBar.classList.add('hidden');
-        subBar.innerHTML = '';
-        return;
-    }
-
-    let html = `<button onclick="filterSubDietary('all')" class="px-3 py-1 rounded-full ${currentSubDietaryFilter === 'all' ? 'bg-burgundy-800 text-amber-300 shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'} text-[11px] font-bold flex-shrink-0 transition">✨ Tous</button>`;
-    activeSubOpts.forEach(sub => {
-        const isSubActive = currentSubDietaryFilter === sub.name;
-        html += `<button onclick="filterSubDietary('${sub.name}')" class="px-3 py-1 rounded-full ${isSubActive ? 'bg-burgundy-800 text-amber-300 shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'} text-[11px] font-bold flex-shrink-0 transition">🔹 ${sub.name}</button>`;
-    });
-    subBar.innerHTML = html;
-    subBar.classList.remove('hidden');
-}
 
 function renderFormulesGrid() {
     const container = document.getElementById('formulesGridContainer');
-    if (!container || typeof formules === 'undefined') return;
+    if (!container) return;
     const availableFormules = formules.filter(f => f.infinite || (f.stock !== undefined ? f.stock > 0 : true));
     if (availableFormules.length === 0) {
         container.innerHTML = `<div class="col-span-2 text-center text-slate-400 py-4">Aucune offre disponible</div>`;
@@ -187,8 +74,75 @@ function renderFormulesGrid() {
     `).join('');
 }
 
+function renderDietaryFiltersBar() {
+    const bar = document.getElementById('dietaryFiltersBar');
+    if (!bar) return;
+    let html = `<button onclick="filterDietary('all')" class="px-4 py-2 rounded-full ${currentDietaryFilter === 'all' ? 'bg-burgundy-800 text-amber-300 shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'} text-xs font-bold flex-shrink-0 transition">🍽️ Tous</button>`;
+    dietaryFilters.forEach(diet => {
+        const isActive = currentDietaryFilter === diet.id;
+        html += `<button onclick="filterDietary('${diet.id}')" class="px-4 py-2 rounded-full ${isActive ? 'bg-burgundy-800 text-amber-300 shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'} text-xs font-bold flex-shrink-0 transition">${diet.fr}</button>`;
+    });
+    bar.innerHTML = html;
+}
+
+function renderSubDietaryBar() {
+    const subBar = document.getElementById('subDietaryFiltersBar');
+    if (!subBar) return;
+    const activeDiet = dietaryFilters.find(d => d.id === currentDietaryFilter);
+    if (!activeDiet || !activeDiet.subOptions || activeDiet.subOptions.length === 0) {
+        subBar.classList.add('hidden');
+        subBar.innerHTML = '';
+        return;
+    }
+    const activeSubOpts = activeDiet.subOptions.filter(sub => sub.enabled !== false);
+    if (activeSubOpts.length === 0) {
+        subBar.classList.add('hidden');
+        subBar.innerHTML = '';
+        return;
+    }
+
+    let html = `<button onclick="filterSubDietary('all')" class="px-3 py-1 rounded-full ${currentSubDietaryFilter === 'all' ? 'bg-burgundy-800 text-amber-300 shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'} text-[11px] font-bold flex-shrink-0 transition">✨ Tous</button>`;
+    activeSubOpts.forEach(sub => {
+        const isSubActive = currentSubDietaryFilter === sub.name;
+        html += `<button onclick="filterSubDietary('${sub.name}')" class="px-3 py-1 rounded-full ${isSubActive ? 'bg-burgundy-800 text-amber-300 shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'} text-[11px] font-bold flex-shrink-0 transition">🔹 ${sub.name}</button>`;
+    });
+    subBar.innerHTML = html;
+    subBar.classList.remove('hidden');
+}
+
+function renderQuickCategoryPills() {
+    const pillsContainer = document.getElementById('quickCategoryPills');
+    if (!pillsContainer) return;
+    pillsContainer.innerHTML = categories.map(cat => `
+        <button onclick="openCategoryModal('${cat.id}')" class="px-3.5 py-1.5 rounded-full bg-burgundy-900 text-cream-100 hover:bg-burgundy-700 text-xs font-bold shadow flex-shrink-0 transition flex items-center gap-1.5 hover:scale-105">
+            <img src="${cat.img}" class="w-4 h-4 rounded-full object-cover">
+            <span>${cat.fr}</span>
+        </button>
+    `).join('');
+}
+
+function renderCategoriesGrid() {
+    const container = document.getElementById('categoriesGridContainer');
+    if (!container) return;
+    container.innerHTML = categories.map(cat => `
+        <div onclick="openCategoryModal('${cat.id}')" class="h-36 sm:h-44 rounded-2xl shadow-md overflow-hidden relative group cursor-pointer border border-amber-300/30 hover:scale-105 transition duration-300 flex flex-col justify-end">
+            <img src="${cat.img}" loading="lazy" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            <div class="absolute inset-0 bg-gradient-to-t from-burgundy-900/80 via-transparent to-transparent"></div>
+            <div class="relative p-3 sm:p-4 text-cream-100 flex flex-col justify-end">
+                <h3 class="font-extrabold text-base sm:text-lg tracking-wide">${cat.fr}</h3>
+                <span class="text-xs text-amber-300 font-semibold mt-1">Voir les produits <i class="fa-solid fa-arrow-up text-[10px]"></i></span>
+            </div>
+        </div>
+    `).join('');
+
+    const select = document.getElementById('hierProdCatSelect');
+    if(select) {
+        select.innerHTML = categories.map(cat => `<option value="${cat.id}">${cat.fr}</option>`).join('');
+    }
+    renderQuickCategoryPills();
+}
+
 function openCategoryModal(catId) {
-    if (typeof categoriesMap === 'undefined') return;
     const cat = categoriesMap.get(catId);
     if (!cat) return;
     document.getElementById('modalCatTitle').innerText = cat.fr;
@@ -240,7 +194,6 @@ function closeCategoryModal() {
 }
 
 function openCustomizationModal(itemId) {
-    if (typeof menuMap === 'undefined') return;
     const item = menuMap.get(itemId);
     if (!item || (!item.infinite && item.stock <= 0)) return;
     currentCustomizingItem = item;
@@ -327,150 +280,132 @@ function closeCustomizationModal() {
     }, 300);
 }
 
-function openCartModal() {
-    const modal = document.getElementById('cartModal');
-    const content = document.getElementById('cartModalContent');
-    modal.classList.remove('hidden');
-    setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('translate-x-full'); }, 10);
-    document.body.style.overflow = 'hidden';
+document.addEventListener('change', function(e) {
+    if (e.target && (e.target.name === 'addon' || e.target.name === 'size' || e.target.name === 'temp' || e.target.name === 'nestedDiet')) {
+        updateCustomizationTotal();
+    }
+});
+
+function updateCustomizationTotal() {
+    if (!currentCustomizingItem) return;
+    let total = currentCustomizingItem.price;
+    if (currentCustomizingItem.hasSize) {
+        const selectedSize = document.querySelector('input[name="size"]:checked');
+        if (selectedSize && selectedSize.dataset.price) total += parseFloat(selectedSize.dataset.price);
+    }
+    const selectedNestedDiet = document.querySelector('input[name="nestedDiet"]:checked');
+    if (selectedNestedDiet && selectedNestedDiet.dataset.price) {
+        total += parseFloat(selectedNestedDiet.dataset.price);
+    }
+    document.querySelectorAll('input[name="addon"]:checked').forEach(cb => {
+        total += parseFloat(cb.dataset.price || 0);
+    });
+    if (flashDiscountActive) {
+        total = total * 0.90;
+    }
+    document.getElementById('custFinalPrice').innerText = total.toFixed(2) + " €";
 }
 
-function closeCartModal() {
-    const modal = document.getElementById('cartModal');
-    const content = document.getElementById('cartModalContent');
-    modal.classList.add('opacity-0');
-    content.classList.add('translate-x-full');
-    setTimeout(() => { modal.classList.add('hidden'); document.body.style.overflow = 'auto'; }, 300);
-}
+function confirmAddToCartCustomized() {
+    if (!currentCustomizingItem) return;
+    let options = [];
+    if (currentCustomizingItem.hasTemp) {
+        const temp = document.querySelector('input[name="temp"]:checked');
+        if (temp) options.push(temp.value);
+    }
+    const nestedDiet = document.querySelector('input[name="nestedDiet"]:checked');
+    if (nestedDiet) options.push(nestedDiet.value);
+    
+    let size = null;
+    if (currentCustomizingItem.hasSize) {
+        size = document.querySelector('input[name="size"]:checked');
+        if (size) options.push(size.value);
+    }
 
-function openFavoritesModal() {
-    updateFavoritesUI();
-    const modal = document.getElementById('favoritesModal');
-    const content = document.getElementById('favoritesModalContent');
-    modal.classList.remove('hidden');
-    setTimeout(() => {
-        modal.classList.remove('opacity-0');
-        content.classList.remove('translate-x-full');
-    }, 10);
-    document.body.style.overflow = 'hidden';
-}
+    let selectedAddons = [];
+    document.querySelectorAll('input[name="addon"]:checked').forEach(cb => {
+        selectedAddons.push(cb.value);
+    });
 
-function closeFavoritesModal() {
-    const modal = document.getElementById('favoritesModal');
-    const content = document.getElementById('favoritesModalContent');
-    modal.classList.add('opacity-0');
-    content.classList.add('translate-x-full');
-    setTimeout(() => {
-        modal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }, 300);
-}
+    const userNote = document.getElementById('customerItemNote').value.trim();
+    const customTitle = `${currentCustomizingItem.name}${options.length > 0 ? ` [${options.join(', ')}]` : ''}${selectedAddons.length > 0 ? ` (${selectedAddons.join(', ')})` : ''}${userNote ? ` [Note: ${userNote}]` : ''}`;
 
-function openAdminModal() {
-    if (isAdminLoggedIn) {
-        document.getElementById('orderNotificationBadge').classList.add('hidden');
-        updateAdminDashboard();
-        const modal = document.getElementById('adminModal');
-        const content = document.getElementById('adminModalContent');
-        modal.classList.remove('hidden');
-        setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
-        document.body.style.overflow = 'hidden';
+    const existingInCart = cart.find(i => i.id === currentCustomizingItem.id && i.name === customTitle);
+    const currentQtyInCart = existingInCart ? existingInCart.qty : 0;
+    
+    if (!currentCustomizingItem.infinite && (currentQtyInCart + 1) > currentCustomizingItem.stock) {
+        alert(`⚠️ عذراً، الكمية المتوفرة في المخزون هي ${currentCustomizingItem.stock} فقط لهذا المنتج.`);
+        return;
+    }
+
+    let extraCost = 0;
+    if (currentCustomizingItem.hasSize && size && size.dataset.price) {
+        extraCost += parseFloat(size.dataset.price);
+    }
+    if (nestedDiet && nestedDiet.dataset.price) {
+        extraCost += parseFloat(nestedDiet.dataset.price);
+    }
+    document.querySelectorAll('input[name="addon"]:checked').forEach(cb => {
+        extraCost += parseFloat(cb.dataset.price || 0);
+    });
+
+    let finalPrice = currentCustomizingItem.price + extraCost;
+    if (flashDiscountActive) {
+        finalPrice = finalPrice * 0.90;
+    }
+
+    const customItemData = { baseName: currentCustomizingItem.name, options, addons: selectedAddons, note: userNote };
+
+    if (existingInCart) {
+        existingInCart.qty++;
     } else {
-        const modal = document.getElementById('adminLoginModal');
-        const content = document.getElementById('adminLoginModalContent');
-        modal.classList.remove('hidden');
-        setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
-        document.getElementById('adminPasswordInput').value = '';
-        document.getElementById('adminPasswordInput').focus();
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-function closeAdminLoginModal() {
-    const modal = document.getElementById('adminLoginModal');
-    const content = document.getElementById('adminLoginModalContent');
-    modal.classList.add('opacity-0');
-    content.classList.add('scale-95');
-    setTimeout(() => { modal.classList.add('hidden'); document.body.style.overflow = 'auto'; }, 300);
-}
-
-function openAdminSettingsModal() {
-    const modal = document.getElementById('adminSettingsModal');
-    const content = document.getElementById('adminSettingsModalContent');
-    modal.classList.remove('hidden');
-    setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
-    document.getElementById('masterKeyInput').value = '';
-    document.getElementById('newAdminPasswordInput').value = '';
-}
-
-function closeAdminSettingsModal() {
-    const modal = document.getElementById('adminSettingsModal');
-    const content = document.getElementById('adminSettingsModalContent');
-    modal.classList.add('opacity-0');
-    content.classList.add('scale-95');
-    setTimeout(() => { modal.classList.add('hidden'); }, 300);
-}
-
-function openClientAllergensModal() {
-    const matrixHead = document.getElementById('clientMatrixHead');
-    const matrixBody = document.getElementById('clientMatrixBody');
-    if (matrixHead && matrixBody) {
-        let headHtml = `<tr class="bg-cream-200 border-b-2 border-burgundy-800 font-black">
-            <th class="p-2.5 border-r border-burgundy-800 text-left pl-4">Allergène</th>`;
-        matrixColumns.forEach(col => {
-            headHtml += `<th class="p-2.5 border-r border-burgundy-800 w-12">${col}</th>`;
-        });
-        headHtml += `</tr>`;
-        matrixHead.innerHTML = headHtml;
-
-        let bodyHtml = '';
-        matrixRows.forEach((row, rIdx) => {
-            bodyHtml += `<tr class="border-b border-burgundy-800/40 hover:bg-cream-100 transition">
-                <td class="p-2.5 border-r border-burgundy-800/40 font-bold text-burgundy-900 text-left pl-4 flex items-center gap-2">
-                    <span class="text-xs text-amber-600 font-extrabold">${String.fromCharCode(65 + rIdx)}</span> ${row.name}
-                </td>`;
-            matrixColumns.forEach((col, cIdx) => {
-                const hasDot = row.dots && row.dots[cIdx];
-                bodyHtml += `<td class="p-2.5 border-r border-burgundy-800/40">${hasDot ? '<i class="fa-solid fa-circle text-burgundy-900 text-xs"></i>' : ''}</td>`;
-            });
-            bodyHtml += `</tr>`;
-        });
-        matrixBody.innerHTML = bodyHtml;
+        cart.push({ id: currentCustomizingItem.id, name: customTitle, itemData: customItemData, price: finalPrice, img: currentCustomizingItem.img, qty: 1 });
     }
 
-    const modal = document.getElementById('clientAllergensModal');
-    const content = document.getElementById('clientAllergensModalContent');
-    modal.classList.remove('hidden');
-    setTimeout(() => {
-        modal.classList.remove('opacity-0');
-        content.classList.remove('scale-95');
-    }, 10);
-    document.body.style.overflow = 'hidden';
+    saveToStorage();
+    updateCartUI();
+    closeCustomizationModal();
+    closeCategoryModal();
+    openCartModal();
 }
 
-function closeClientAllergensModal() {
-    const modal = document.getElementById('clientAllergensModal');
-    const content = document.getElementById('clientAllergensModalContent');
-    modal.classList.add('opacity-0');
-    content.classList.add('scale-95');
-    setTimeout(() => {
-        modal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }, 300);
+function addSpecialToCart(title, price, img, formuleId) {
+    if (formuleId) {
+        const f = formules.find(item => item.id === formuleId);
+        if (f && !f.infinite) {
+            const existingCartItem = cart.find(i => i.name === title);
+            const currentCartQty = existingCartItem ? existingCartItem.qty : 0;
+            if (currentCartQty + 1 > f.stock) {
+                alert(`⚠️ عذراً، الكمية المتوفرة في المخزون لهذا العرض هي ${f.stock} فقط.`);
+                return;
+            }
+        }
+    }
+
+    let finalPrice = price;
+    if (flashDiscountActive) finalPrice = finalPrice * 0.90;
+
+    const existing = cart.find(i => i.name === title);
+    if (existing) {
+        existing.qty++;
+    } else {
+        cart.push({ id: formuleId || Date.now(), name: title, isFormule: !!formuleId, itemData: { baseName: title, options: [], addons: [], note: '' }, price: finalPrice, img, qty: 1 });
+    }
+    saveToStorage();
+    updateCartUI();
+    openCartModal();
 }
-document.addEventListener("DOMContentLoaded", () => {
-    if (typeof renderCategoriesGrid === 'function') renderCategoriesGrid();
-    if (typeof renderFormulesGrid === 'function') renderFormulesGrid();
-});
-document.addEventListener("DOMContentLoaded", () => {
-    if (typeof syncMaps === 'function') syncMaps();
-    if (typeof renderCategoriesGrid === 'function') renderCategoriesGrid();
-    if (typeof renderQuickCategoryPills === 'function') renderQuickCategoryPills();
-    if (typeof renderDietaryFiltersBar === 'function') renderDietaryFiltersBar();
-    if (typeof renderSubDietaryBar === 'function') renderSubDietaryBar();
-    if (typeof renderFormulesGrid === 'function') renderFormulesGrid();
-    if (typeof updateFavoritesUI === 'function') updateFavoritesUI();
-    if (typeof updateCartUI === 'function') updateCartUI();
-    if (typeof updateClientTrackerBanner === 'function') updateClientTrackerBanner();
-    if (typeof checkFlashPromoStatus === 'function') checkFlashPromoStatus();
-});
+
+function filterDietary(type) {
+    currentDietaryFilter = type;
+    currentSubDietaryFilter = 'all';
+    renderDietaryFiltersBar();
+    renderSubDietaryBar();
+    renderCategoriesGrid();
+}
+
+function filterSubDietary(subType) {
+    currentSubDietaryFilter = subType;
+    renderSubDietaryBar();
+    renderCategoriesGrid();
+}
