@@ -41,6 +41,49 @@ function applyFlashPromo() {
     updateCartUI();
 }
 
+function toggleFavoriteCurrent() {
+    if (!currentCustomizingItem) return;
+    const index = favorites.indexOf(currentCustomizingItem.id);
+    if (index !== -1) favorites.splice(index, 1);
+    else favorites.push(currentCustomizingItem.id);
+    saveToStorage();
+    updateFavoritesUI();
+    updateFavoriteHeartIcon();
+}
+
+function updateFavoriteHeartIcon() {
+    if (!currentCustomizingItem) return;
+    const favBtn = document.getElementById('custFavBtn');
+    if (favorites.includes(currentCustomizingItem.id)) {
+        favBtn.className = "p-3 rounded-full bg-red-50 text-red-600 transition shadow scale-110";
+    } else {
+        favBtn.className = "p-3 rounded-full bg-slate-100 text-slate-400 hover:text-red-600 transition shadow";
+    }
+}
+
+function openFavoritesModal() {
+    updateFavoritesUI();
+    const modal = document.getElementById('favoritesModal');
+    const content = document.getElementById('favoritesModalContent');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('translate-x-full');
+    }, 10);
+    document.body.style.overflow = 'hidden';
+}
+
+function closeFavoritesModal() {
+    const modal = document.getElementById('favoritesModal');
+    const content = document.getElementById('favoritesModalContent');
+    modal.classList.add('opacity-0');
+    content.classList.add('translate-x-full');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }, 300);
+}
+
 function updateFavoritesUI() {
     const container = document.getElementById('favoritesItemsContainer');
     const badge = document.getElementById('favBadge');
@@ -123,6 +166,22 @@ function changeQty(index, delta) {
     updateCartUI();
 }
 
+function openCartModal() {
+    const modal = document.getElementById('cartModal');
+    const content = document.getElementById('cartModalContent');
+    modal.classList.remove('hidden');
+    setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('translate-x-full'); }, 10);
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCartModal() {
+    const modal = document.getElementById('cartModal');
+    const content = document.getElementById('cartModalContent');
+    modal.classList.add('opacity-0');
+    content.classList.add('translate-x-full');
+    setTimeout(() => { modal.classList.add('hidden'); document.body.style.overflow = 'auto'; }, 300);
+}
+
 function submitOrderInternal(e) {
     e.preventDefault();
     if (isRushHour) { alert("⚠️ Désolé, le café est en heure de pointe."); return; }
@@ -173,4 +232,53 @@ function submitOrderInternal(e) {
     showToast("✅ Commande envoyée !");
     updateClientTrackerBanner();
     renderFormulesGrid();
+}
+
+function dismissClientTracker() {
+    const rawLastOrder = localStorage.getItem('club_cafe_my_last_order');
+    if (rawLastOrder) {
+        try {
+            const myOrder = JSON.parse(rawLastOrder);
+            localStorage.setItem('club_cafe_dismissed_order', myOrder.id);
+        } catch(e) {}
+    }
+    document.getElementById('clientActiveOrderBanner').classList.add('hidden');
+}
+
+function updateClientTrackerBanner() {
+    const banner = document.getElementById('clientActiveOrderBanner');
+    try {
+        const rawOrders = localStorage.getItem('club_cafe_orders_v28');
+        const rawLastOrder = localStorage.getItem('club_cafe_my_last_order');
+        const dismissedId = localStorage.getItem('club_cafe_dismissed_order');
+        if (!rawLastOrder) { banner.classList.add('hidden'); return; }
+        const myOrder = JSON.parse(rawLastOrder);
+        if (dismissedId && dismissedId === myOrder.id) { banner.classList.add('hidden'); return; }
+        const allOrders = rawOrders ? JSON.parse(rawOrders) : [];
+        const latestOrderState = allOrders.find(o => o.id === myOrder.id);
+        if (!latestOrderState) { banner.classList.add('hidden'); return; }
+
+        const currentStatus = latestOrderState.status;
+        document.getElementById('bannerOrderId').innerText = "#" + myOrder.id;
+        document.getElementById('bannerClientName').innerText = myOrder.client;
+        document.getElementById('bannerOrderTotal').innerText = myOrder.total.toFixed(2) + " €";
+        
+        const badge = document.getElementById('bannerStatusBadge');
+        const statusText = document.getElementById('bannerStatusText');
+
+        if (currentStatus === 'En attente de paiement') {
+            badge.innerText = "En attente 🟡";
+            badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-amber-400 text-burgundy-900";
+            statusText.innerText = "⏳ Veuillez vous présenter au comptoir pour régler votre commande.";
+        } else if (currentStatus === 'En préparation') {
+            badge.innerText = "En préparation 🔄";
+            badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-blue-500 text-white";
+            statusText.innerText = "👨‍🍳 Votre commande est en cours de préparation dans notre cuisine.";
+        } else if (currentStatus === 'Prêt') {
+            badge.innerText = "Prêt ! ☕";
+            badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white animate-pulse";
+            statusText.innerText = "🎉 Votre commande est prête ! Veuillez la récupérer au comptoir.";
+        }
+        banner.classList.remove('hidden');
+    } catch(e) { banner.classList.add('hidden'); }
 }
