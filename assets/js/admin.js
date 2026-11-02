@@ -1,14 +1,22 @@
+// --- Helper Functions لتحسين الأداء وتقليل التكرار ---
+const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+const getTabElementNames = (name) => ({
+    tab: document.getElementById(`adminTab${capitalize(name)}`),
+    btn: document.getElementById(`tabBtn${capitalize(name)}`)
+});
+
 function switchAdminTab(tabName) {
-    ['formules', 'categories', 'diets', 'allergens', 'clients', 'orders'].forEach(t => {
-        const el = document.getElementById(`adminTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
-        const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
-        if(el) el.classList.add('hidden');
-        if(btn) btn.className = "pb-3 px-4 font-bold text-xs border-b-2 border-transparent text-slate-500 hover:text-burgundy-900 transition flex items-center gap-2 flex-shrink-0";
+    const tabs = ['formules', 'categories', 'diets', 'allergens', 'clients', 'orders'];
+    
+    tabs.forEach(t => {
+        const { tab, btn } = getTabElementNames(t);
+        if (tab) tab.classList.add('hidden');
+        if (btn) btn.className = "pb-3 px-4 font-bold text-xs border-b-2 border-transparent text-slate-500 hover:text-burgundy-900 transition flex items-center gap-2 flex-shrink-0";
     });
-    const targetTab = document.getElementById(`adminTab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`);
-    const targetBtn = document.getElementById(`tabBtn${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`);
-    if(targetTab) targetTab.classList.remove('hidden');
-    if(targetBtn) targetBtn.className = "pb-3 px-4 font-bold text-xs border-b-2 border-burgundy-800 text-burgundy-900 transition flex items-center gap-2 flex-shrink-0";
+
+    const { tab: targetTab, btn: targetBtn } = getTabElementNames(tabName);
+    if (targetTab) targetTab.classList.remove('hidden');
+    if (targetBtn) targetBtn.className = "pb-3 px-4 font-bold text-xs border-b-2 border-burgundy-800 text-burgundy-900 transition flex items-center gap-2 flex-shrink-0";
 
     if (tabName === 'allergens') {
         renderAdminMatrixTable();
@@ -61,7 +69,7 @@ function updateClientsTabUI() {
         trendingList.innerHTML = trendingItems.map((i, index) => `
             <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-amber-200 shadow-sm flex-shrink-0">
                 <span class="w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center">${index + 1}</span>
-                <img src="${i.img}" class="w-7 h-7 rounded-lg object-cover">
+                <img src="${i.img}" class="w-7 h-7 rounded-lg object-cover" loading="lazy">
                 <div>
                     <p class="text-xs font-bold text-slate-800">${i.name}</p>
                     <p class="text-[10px] text-burgundy-800 font-black">${Number(i.price).toFixed(2)} € (Stock: ${i.infinite ? 'Infini' : i.stock})</p>
@@ -683,7 +691,7 @@ function updateAdminDashboard() {
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="p-4 bg-burgundy-900 text-cream-100 flex items-center justify-between flex-wrap gap-3">
                         <div class="flex items-center gap-3">
-                            <img src="${cat.img}" class="w-10 h-10 rounded-lg object-cover border-2 border-amber-400">
+                            <img src="${cat.img}" loading="lazy" class="w-10 h-10 rounded-lg object-cover border-2 border-amber-400">
                             <div>
                                 <h3 class="font-black text-base text-amber-300">${cat.fr}</h3>
                                 <span class="text-[11px] text-cream-200">ID: ${cat.id} | Produits : ${catProducts.length}</span>
@@ -727,7 +735,7 @@ function updateAdminDashboard() {
                                 ${catProducts.map(item => `
                                     <div class="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-between flex-wrap gap-2 shadow-sm">
                                         <div class="flex items-center gap-2 flex-grow">
-                                            <img src="${item.img}" class="w-8 h-8 rounded object-cover flex-shrink-0">
+                                            <img src="${item.img}" loading="lazy" class="w-8 h-8 rounded object-cover flex-shrink-0">
                                             <input type="text" value="${item.name}" onchange="updateInlineProduct(${item.id}, 'name', this.value)" class="w-full sm:w-36 px-2 py-1 text-xs border rounded bg-white font-bold">
                                         </div>
                                         <div class="flex items-center gap-3 flex-wrap">
@@ -764,32 +772,32 @@ function updateAdminDashboard() {
     }
 
     const dietsListEl = document.getElementById('adminDietsList');
-if (dietsListEl) {
-    dietsListEl.innerHTML = dietaryFilters.map(diet => `
-        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
-            <div class="flex items-center justify-between">
-                <span class="font-extrabold text-burgundy-900 text-xs">${diet.fr}</span>
-                <div class="flex items-center gap-1">
-                    <button onclick="editDietaryFilter('${diet.id}')" class="text-amber-600 hover:text-amber-800 p-1.5 bg-amber-50 rounded text-xs"><i class="fa-solid fa-pen-to-square"></i></button>
-                    <button onclick="deleteDietaryFilter('${diet.id}')" class="text-red-600 hover:text-red-800 p-1.5 bg-red-50 rounded text-xs"><i class="fa-solid fa-trash"></i></button>
+    if (dietsListEl) {
+        dietsListEl.innerHTML = dietaryFilters.map(diet => `
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="font-extrabold text-burgundy-900 text-xs">${diet.fr}</span>
+                    <div class="flex items-center gap-1">
+                        <button onclick="editDietaryFilter('${diet.id}')" class="text-amber-600 hover:text-amber-800 p-1.5 bg-amber-50 rounded text-xs"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteDietaryFilter('${diet.id}')" class="text-red-600 hover:text-red-800 p-1.5 bg-red-50 rounded text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2 pt-1">
+                    <span class="text-[11px] font-bold text-slate-500 self-center">Options :</span>
+                    ${(!diet.subOptions || diet.subOptions.length === 0) ? `<span class="text-[11px] text-slate-400 italic">Aucune sous-option</span>` : 
+                        diet.subOptions.map((sub, sIdx) => `
+                            <span class="bg-white px-2.5 py-1 rounded-lg border text-[11px] font-bold ${sub.enabled !== false ? 'text-slate-800 border-emerald-400' : 'text-slate-400 bg-slate-100 border-slate-300 line-through'} flex items-center gap-1.5 shadow-sm">
+                                ${sub.name} (${Number(sub.price || 0).toFixed(2)}€)
+                                <button onclick="toggleDietSubOptionStatus('${diet.id}', ${sIdx})" class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${sub.enabled !== false ? 'bg-emerald-600 text-white' : 'bg-slate-400 text-white'}" title="تفعيل أو إيقاف">
+                                    ${sub.enabled !== false ? 'ON' : 'OFF'}
+                                </button>
+                            </span>
+                        `).join('')
+                    }
                 </div>
             </div>
-            <div class="flex flex-wrap gap-2 pt-1">
-                <span class="text-[11px] font-bold text-slate-500 self-center">Options :</span>
-                ${(!diet.subOptions || diet.subOptions.length === 0) ? `<span class="text-[11px] text-slate-400 italic">Aucune sous-option</span>` : 
-                    diet.subOptions.map((sub, sIdx) => `
-                        <span class="bg-white px-2.5 py-1 rounded-lg border text-[11px] font-bold ${sub.enabled !== false ? 'text-slate-800 border-emerald-400' : 'text-slate-400 bg-slate-100 border-slate-300 line-through'} flex items-center gap-1.5 shadow-sm">
-                            ${sub.name} (${Number(sub.price || 0).toFixed(2)}€)
-                            <button onclick="toggleDietSubOptionStatus('${diet.id}', ${sIdx})" class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${sub.enabled !== false ? 'bg-emerald-600 text-white' : 'bg-slate-400 text-white'}" title="تفعيل أو إيقاف">
-                                ${sub.enabled !== false ? 'ON' : 'OFF'}
-                            </button>
-                        </span>
-                    `).join('')
-                }
-            </div>
-        </div>
-    `).join('');
-}
+        `).join('');
+    }
 
     const ordersCardsContainer = document.getElementById('adminOrdersCardsContainer');
     if (ordersCardsContainer) {
