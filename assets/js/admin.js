@@ -1,8 +1,4 @@
-// استدعاءات فايربيس الضرورية في أعلى الملف
-// Importations Firebase nécessaires en haut du fichier
-
-
-// --- Helper Functions لتحسين الأداء وتقليل التكرار ---
+// --- Helper Functions pour améliorer les performances et réduire la duplication ---
 const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 const getTabElementNames = (name) => ({
     tab: document.getElementById(`adminTab${capitalize(name)}`),
@@ -40,7 +36,7 @@ function updateClientsTabUI() {
 
     const totalActiveCarts = cart.length > 0 ? 1 : 0;
     if (activeCartsStat) {
-        activeCartsStat.innerText = `🛒 سلال نشطة : ${totalActiveCarts}`;
+        activeCartsStat.innerText = `🛒 Paniers actifs : ${totalActiveCarts}`;
     }
 
     if (cart.length === 0) {
@@ -51,7 +47,7 @@ function updateClientsTabUI() {
                 <span class="font-bold"><b>${i.qty}x</b> ${i.name}</span>
                 <div class="flex items-center gap-2">
                     <span class="text-burgundy-800 font-black">${(i.price * i.qty).toFixed(2)} €</span>
-                    <button onclick="triggerFlashPromo()" class="px-2 py-1 bg-amber-500 text-burgundy-900 text-[10px] font-extrabold rounded shadow hover:bg-amber-400" title="إرسال عرض فلاش للزبون">⚡ Flash Promo</button>
+                    <button onclick="triggerFlashPromo()" class="px-2 py-1 bg-amber-500 text-burgundy-900 text-[10px] font-extrabold rounded shadow hover:bg-amber-400" title="Envoyer une offre Flash">⚡ Flash Promo</button>
                 </div>
             </div>
         `).join('');
@@ -119,7 +115,7 @@ function exportDatabaseJSON() {
     a.href = url;
     a.download = `club_cafe_backup_${new Date().toISOString().slice(0,10)}.json`;
     a.click();
-    showToast("💾 تم تصدير النسخة الاحتياطية بنجاح !");
+    showToast("💾 Sauvegarde exportée avec succès !");
 }
 
 function importDatabaseJSON(event) {
@@ -144,9 +140,9 @@ function importDatabaseJSON(event) {
             renderSubDietaryBar();
             renderFormulesGrid();
             updateAdminDashboard();
-            showToast("⚡ تم استيراد البيانات بنجاح !");
+            showToast("⚡ Données importées avec succès !");
         } catch(err) {
-            alert("❌ ملف غير صالح أو تالف !");
+            alert("❌ Fichier invalide ou corrompu !");
         }
     };
     reader.readAsText(file);
@@ -185,7 +181,7 @@ function duplicateProduct(id) {
     menuItems.push(newItem);
     saveToStorage();
     updateAdminDashboard();
-    showToast(`📋 تم نسخ المنتج بنجاح!`);
+    showToast(`📋 Produit copié avec succès !`);
 }
 
 function duplicateFormule(id) {
@@ -196,7 +192,7 @@ function duplicateFormule(id) {
     saveToStorage();
     renderFormulesGrid();
     updateAdminDashboard();
-    showToast(`📋 تم نسخ العرض بنجاح!`);
+    showToast(`📋 Offre copiée avec succès !`);
 }
 
 function moveFormuleOrder(index, direction) {
@@ -218,7 +214,7 @@ function updateInlineProduct(id, field, value) {
     if (field === 'stock') item.stock = parseInt(value) || 0;
     saveToStorage();
     updateAdminDashboard();
-    showToast("⚡ تم التحديث المباشر!");
+    showToast("⚡ Mise à jour en direct effectuée !");
 }
 
 function updateInlineFormule(id, field, value) {
@@ -229,7 +225,7 @@ function updateInlineFormule(id, field, value) {
     if (field === 'stock') f.stock = parseInt(value) || 0;
     saveToStorage();
     renderFormulesGrid();
-    showToast("⚡ تم التحديث المباشر للعرض!");
+    showToast("⚡ Mise à jour en direct de l'offre !");
 }
 
 function toggleInfiniteFormuleStockInput(isChecked) {
@@ -438,12 +434,12 @@ function matrixAddColumn() {
     });
     saveToStorage();
     renderAdminMatrixTable();
-    showToast("➕ تم إضافة عمود جديد ! / Colonne ajoutée !");
+    showToast("➕ Colonne ajoutée !");
 }
 
 function matrixRemoveColumn() {
     if (matrixColumns.length <= 1) {
-        alert("⚠️ لا يمكن حذف جميع الأعمدة! / Impossible de supprimer toutes les colonnes !");
+        alert("⚠️ Impossible de supprimer toutes les colonnes !");
         return;
     }
     matrixColumns.pop();
@@ -452,7 +448,7 @@ function matrixRemoveColumn() {
     });
     saveToStorage();
     renderAdminMatrixTable();
-    showToast("➖ تم حذف العمود الأخير ! / Colonne supprimée !");
+    showToast("➖ Colonne supprimée !");
 }
 
 function matrixSaveRow(e) {
@@ -464,11 +460,11 @@ function matrixSaveRow(e) {
 
     if (editIndex >= 0) {
         matrixRows[editIndex].name = val;
-        showToast("✅ تم تحديث السطر بنجاح ! / Ligne mise à jour !");
+        showToast("✅ Ligne mise à jour !");
     } else {
         let defaultDots = matrixColumns.map(() => false);
         matrixRows.push({ name: val, dots: defaultDots });
-        showToast("✅ تم إضافة السطر بنجاح ! / Ligne ajoutée !");
+        showToast("✅ Ligne ajoutée !");
     }
     saveToStorage();
     renderAdminMatrixTable();
@@ -482,11 +478,11 @@ function resetMatrixRowForm() {
 }
 
 function matrixDeleteRow(index) {
-    if (confirm("هل أنت متأكد من حذف هذا السطر؟ / Êtes-vous sûr de supprimer cette ligne ?")) {
+    if (confirm("Êtes-vous sûr de supprimer cette ligne ?")) {
         matrixRows.splice(index, 1);
         saveToStorage();
         renderAdminMatrixTable();
-        showToast("🗑️ تم حذف السطر ! / Ligne supprimée !");
+        showToast("🗑️ Ligne supprimée !");
     }
 }
 
@@ -518,12 +514,12 @@ function renderAdminMatrixTable() {
             </td>`;
         });
         bodyHtml += `<td class="p-2 border text-center">
-            <button onclick="matrixDeleteRow(${rIdx})" class="px-2 py-1 bg-red-600 text-white rounded text-xs font-bold">حذف</button>
+            <button onclick="matrixDeleteRow(${rIdx})" class="px-2 py-1 bg-red-600 text-white rounded text-xs font-bold">Supprimer</button>
         </td></tr>`;
     });
     bodyHtml += `<tr><td colspan="${matrixColumns.length + 2}" class="p-3 text-center bg-slate-100">
         <button onclick="saveAdminMatrixChanges()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow transition">
-            💾 حفظ كافة التعديلات (Sauvegarder)
+            💾 Sauvegarder
         </button>
     </td></tr>`;
     adminBody.innerHTML = bodyHtml;
@@ -553,7 +549,7 @@ function saveAdminMatrixChanges() {
 
     saveToStorage();
     renderAdminMatrixTable();
-    showToast("💾 تم حفظ تعديلات المصفوفة بنجاح!");
+    showToast("💾 Modifications de la matrice enregistrées !");
 }
 
 function saveProductHierarchical(e) {
@@ -661,8 +657,8 @@ function updateAdminDashboard() {
             <tr class="border-b hover:bg-slate-50 transition">
                 <td class="p-3 text-center">
                     <div class="flex items-center justify-center gap-1">
-                        <button onclick="moveFormuleOrder(${idx}, -1)" class="w-5 h-5 bg-slate-200 hover:bg-slate-300 rounded text-[10px] font-bold" title="تحريك لأعلى">⬆️</button>
-                        <button onclick="moveFormuleOrder(${idx}, 1)" class="w-5 h-5 bg-slate-200 hover:bg-slate-300 rounded text-[10px] font-bold" title="تحريك لأسفل">⬇️</button>
+                        <button onclick="moveFormuleOrder(${idx}, -1)" class="w-5 h-5 bg-slate-200 hover:bg-slate-300 rounded text-[10px] font-bold" title="Monter">⬆️</button>
+                        <button onclick="moveFormuleOrder(${idx}, 1)" class="w-5 h-5 bg-slate-200 hover:bg-slate-300 rounded text-[10px] font-bold" title="Descendre">⬇️</button>
                     </div>
                 </td>
                 <td class="p-3 flex items-center gap-2">
@@ -678,9 +674,9 @@ function updateAdminDashboard() {
                     `}
                 </td>
                 <td class="p-3 text-right flex items-center justify-end gap-1.5">
-                    <button onclick="editFormule(${f.id})" class="text-amber-600 hover:text-amber-800 font-bold px-2 py-1 bg-amber-50 rounded transition hover:scale-110" title="تعديل تفصيلي"><i class="fa-solid fa-pen-to-square"></i></button>
-                    <button onclick="duplicateFormule(${f.id})" class="text-purple-600 hover:text-purple-800 font-bold px-2 py-1 bg-purple-50 rounded transition hover:scale-110" title="نسخ سريع"><i class="fa-solid fa-copy"></i></button>
-                    <button onclick="deleteFormule(${f.id})" class="text-red-600 hover:text-red-800 font-bold px-2 py-1 bg-red-50 rounded transition hover:scale-110" title="حذف"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="editFormule(${f.id})" class="text-amber-600 hover:text-amber-800 font-bold px-2 py-1 bg-amber-50 rounded transition hover:scale-110" title="Modification détaillée"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button onclick="duplicateFormule(${f.id})" class="text-purple-600 hover:text-purple-800 font-bold px-2 py-1 bg-purple-50 rounded transition hover:scale-110" title="Copie rapide"><i class="fa-solid fa-copy"></i></button>
+                    <button onclick="deleteFormule(${f.id})" class="text-red-600 hover:text-red-800 font-bold px-2 py-1 bg-red-50 rounded transition hover:scale-110" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
                 </td>
             </tr>
         `).join('');
@@ -718,10 +714,10 @@ function updateAdminDashboard() {
                                 catAddons.map((addonObj, aIdx) => `
                                     <span class="bg-white px-2.5 py-1 rounded-lg border text-[11px] font-bold ${addonObj.enabled ? 'text-slate-800 border-emerald-400' : 'text-slate-400 bg-slate-100 border-slate-300 line-through'} flex items-center gap-1.5 shadow-sm">
                                         ${addonObj.name} (${Number(addonObj.price || 0).toFixed(2)}€)
-                                        <button onclick="toggleCategoryAddonStatus('${cat.id}', ${aIdx})" class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${addonObj.enabled ? 'bg-emerald-600 text-white' : 'bg-slate-400 text-white'}" title="تفعيل أو إيقاف">
+                                        <button onclick="toggleCategoryAddonStatus('${cat.id}', ${aIdx})" class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${addonObj.enabled ? 'bg-emerald-600 text-white' : 'bg-slate-400 text-white'}" title="Activer ou désactiver">
                                             ${addonObj.enabled ? 'ON' : 'OFF'}
                                         </button>
-                                        <button onclick="removeAddonFromCategory('${cat.id}', ${aIdx})" class="text-red-600 hover:text-red-800 ml-1"><i class="fa-solid fa-xmark"></i></button>
+                                        <button onclick="removeAddonFromCategory('${cat.id}', ${aIdx})" class="text-red-600 hover:text-red-800 ml-1" title="Supprimer"><i class="fa-solid fa-xmark"></i></button>
                                     </span>
                                 `).join('')
                             }
@@ -792,7 +788,7 @@ function updateAdminDashboard() {
                         diet.subOptions.map((sub, sIdx) => `
                             <span class="bg-white px-2.5 py-1 rounded-lg border text-[11px] font-bold ${sub.enabled !== false ? 'text-slate-800 border-emerald-400' : 'text-slate-400 bg-slate-100 border-slate-300 line-through'} flex items-center gap-1.5 shadow-sm">
                                 ${sub.name} (${Number(sub.price || 0).toFixed(2)}€)
-                                <button onclick="toggleDietSubOptionStatus('${diet.id}', ${sIdx})" class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${sub.enabled !== false ? 'bg-emerald-600 text-white' : 'bg-slate-400 text-white'}" title="تفعيل أو إيقاف">
+                                <button onclick="toggleDietSubOptionStatus('${diet.id}', ${sIdx})" class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${sub.enabled !== false ? 'bg-emerald-600 text-white' : 'bg-slate-400 text-white'}" title="Activer ou désactiver">
                                     ${sub.enabled !== false ? 'ON' : 'OFF'}
                                 </button>
                             </span>
@@ -813,6 +809,7 @@ function updateAdminDashboard() {
         if (filteredOrders.length === 0) {
             ordersCardsContainer.innerHTML = `<div class="col-span-2 text-center text-slate-400 py-10 bg-white rounded-2xl border border-slate-200">Aucune commande trouvée</div>`;
         } else {
+            
             ordersCardsContainer.innerHTML = filteredOrders.map(order => {
                 const orderTime = order.timestamp ? new Date(order.timestamp).getTime() : Date.now();
                 const totalMinutes = Math.max(0, Math.floor((Date.now() - orderTime) / 60000));
@@ -834,7 +831,8 @@ function updateAdminDashboard() {
                     statusBadgeHtml = `<span class="px-2.5 py-1 rounded-lg text-[11px] font-black bg-emerald-100 text-emerald-800">Prêt ! ☕</span>`;
                 }
 
-                const isLate = order.status !== 'Prêt' && totalMinutes >= 20;
+                // التنبيه يظهر فقط إذا كان الطلب قيد التحضير وتأخر 20 دقيقة
+                const isLate = order.status === 'En préparation' && totalMinutes >= 20;
                 if (isLate) cardBorderColor = "border-red-500 animate-pulse";
 
                 return `
@@ -873,6 +871,10 @@ function updateAdminDashboard() {
                                 </button>
                                 <button onclick="printOrderTicket('${order.id}')" class="px-3 py-1.5 bg-burgundy-800 hover:bg-burgundy-700 text-amber-300 rounded-lg font-bold shadow transition flex items-center gap-1.5">
                                     <i class="fa-solid fa-print"></i>
+                                </button>
+                                <!-- زر الحذف الجديد / Le nouveau bouton de suppression -->
+                                <button onclick="deleteOrder('${order.id}')" class="px-2.5 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-lg font-bold shadow transition flex items-center gap-1.5" title="Supprimer">
+                                    <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
                         </div>
@@ -1146,42 +1148,24 @@ window.addEventListener('click', function(e) {
     if (e.target === adminSettingsModal) closeAdminSettingsModal();
     if (e.target === clientAllergensModal) closeClientAllergensModal();
 });
-
-// ---------------------------------------------------------
-// --- دالة إضافة الصنف لفايربيس (الكود المحسّن للدمج) ---
-// --- Fonction d'ajout de l'article à Firebase (Code optimisé intégré) ---
-// ---------------------------------------------------------
-// لا تضع أي import هنا لكي تعمل أزرار الواجهة
-// Ne placez aucun import ici pour que les boutons de l'interface fonctionnent
-
-function handleAddMenuItem(event) {
-    event.preventDefault();
-
-    const name = document.getElementById("adminItemName").value.trim();
-    const price = parseFloat(document.getElementById("adminItemPrice").value);
-    const description = document.getElementById("adminItemDesc").value.trim();
-    const cat = document.getElementById("adminItemCat").value;
-
-    if (!name || isNaN(price) || !cat) {
-        alert("⚠️ الرجاء ملء الحقول الأساسية.");
-        return;
-    }
-
-    try {
-        // استدعاء دالة فايربيس العالمية
-        // Appel de la fonction globale Firebase
-        if (window.addMenuItemToFirebase) {
-            window.addMenuItemToFirebase({
-                name, price, description, cat, infinite: true
-            });
-            alert("✅ تم إضافة الصنف بنجاح!");
-            event.target.reset();
-            if (typeof renderMenu === 'function') renderMenu();
-        } else {
-            alert("⏳ جاري تحميل الاتصال، حاول مجدداً.");
-        }
-    } catch (error) {
-        console.error("خطأ:", error);
-        alert("❌ حدث خطأ.");
+// دالة حذف طلب محدد من لوحة التحكم
+// Fonction pour supprimer une commande spécifique du tableau de bord
+function deleteOrder(orderId) {
+    if (confirm("Êtes-vous sûr de vouloir supprimer cette commande définitivement ?")) {
+        // فلترة الطلبات لإزالة الطلب المحدد
+        // Filtrer les commandes pour supprimer la commande sélectionnée
+        ordersHistory = ordersHistory.filter(o => o.id != orderId);
+        saveToStorage();
+        updateAdminDashboard();
+        showToast("🗑️ Commande supprimée !");
     }
 }
+// تحديث لوحة التحكم تلقائياً كل دقيقة (60000 ملي ثانية) لتحديث أوقات الطلبات وتفعيل التنبيهات
+// Mettre à jour automatiquement le tableau de bord chaque minute (60000 ms) pour actualiser les temps des commandes et déclencher les alertes
+setInterval(() => {
+    // يتأكد أولاً إن المدير مسجل دخوله عشان ما يستهلك موارد المتصفح عالفاضي
+    // Vérifie d'abord que l'administrateur est connecté pour ne pas consommer les ressources du navigateur inutilement
+    if (isAdminLoggedIn && typeof updateAdminDashboard === 'function') {
+        updateAdminDashboard();
+    }
+}, 60000);
